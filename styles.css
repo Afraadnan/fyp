@@ -1,0 +1,278 @@
+/* Main container */
+.main {
+    flex: 1;
+    padding: 40px 48px;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); /* dark gradient */
+    color: #f1f5f9;
+    font-family: 'Segoe UI', sans-serif;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+/* ZK Proof Section Styles */
+#proofInput, #publicInput {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+#verifyProofBtn {
+    background-color: #4a6fa5;
+    color: white;
+}
+
+#proofStatus {
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+/* Each section (container block) */
+.container {
+    background-color: #1e1b3a;
+    border-radius: 16px;
+    padding: 30px 32px;
+    margin-bottom: 32px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.container:hover {
+    box-shadow: 0 6px 28px rgba(0, 0, 0, 0.5);
+    transform: translateY(-4px);
+}
+
+/* Headings */
+h1, h2 {
+    color: #e0e7ff;
+    margin-bottom: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Subsection spacing */
+.info-item {
+    margin: 12px 0;
+    padding: 10px 0;
+    border-bottom: 1px solid #3b3f5c;
+    font-size: 1rem;
+}
+
+/* Status section */
+.status {
+    margin-top: 20px;
+    padding: 18px;
+    background-color: #2d2a55;
+    border-left: 4px solid #7c3aed;
+    border-radius: 8px;
+    font-size: 1rem;
+    color: #e0e7ff;
+}
+
+/* Verification section */
+.verification {
+    background-color: #1f2937;
+    border: 1px solid #4ade80;
+    color: #d1fae5;
+    padding: 16px;
+    border-radius: 8px;
+}
+
+/* Buttons */
+button {
+    margin-top: 12px;
+    padding: 10px 20px;
+    background-color: #7c3aed;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+button:hover {
+    background-color: #9333ea;
+    transform: translateY(-2px);
+}
+
+button + button {
+    margin-left: 8px;
+}
+
+/* Wallet pill tweaks */
+.wallet-pill {
+    background-color: #4338ca;
+    border: none;
+    box-shadow: 0 0 0 2px #818cf866;
+    padding: 8px 12px;
+    border-radius: 20px;
+    color: #f1f5f9;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+/* Better spacing between page sections */
+section + section {
+    margin-top: 40px;
+}
+
+/* === Animated Emoji Styles === */
+
+/* Emoji bounce animation */
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+/* Emoji wiggle animation */
+@keyframes wiggle {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+    25% {
+        transform: rotate(10deg);
+    }
+    75% {
+        transform: rotate(-10deg);
+    }
+}
+
+/* Emoji base */
+.emoji {
+    display: inline-block;
+    font-size: 1.5rem;
+    margin-right: 8px;
+}
+
+/* Bouncy emoji */
+.emoji.bounce {
+    animation: bounce 1s infinite ease-in-out;
+}
+
+/* Wiggly emoji */
+.emoji.wiggle {
+    animation: wiggle 1.5s infinite ease-in-out;
+}
+/* Add these styles to your existing CSS file */
+
+.verification-options {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+button.advanced {
+    background-color: #6e3dc8;
+    border-color: #5728af;
+}
+
+button.advanced:hover {
+    background-color: #5728af;
+}
+
+button.highlight {
+    animation: pulse 2s infinite;
+    background-color: #d64b4b;
+    border-color: #c43535;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(214, 75, 75, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(214, 75, 75, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(214, 75, 75, 0);
+    }
+}
+
+/* You may already have status styles, but make sure they include these */
+.status {
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.status.info {
+    background-color: #e3f2fd;
+    color: #0d47a1;
+}
+
+.status.success {
+    background-color: #e8f5e9;
+    color: #1b5e20;
+}
+
+.status.warning {
+    background-color: #fff8e1;
+    color: #ff6f00;
+}
+
+.status.error {
+    background-color: #ffebee;
+    color: #b71c1c;
+}
+
+/* Add to your styles.css */
+.zk-status {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 6px;
+    background-color: rgba(0, 0, 0, 0.1);
+    font-size: 0.9rem;
+}
+
+.proof-details {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.proof-details details {
+    width: 100%;
+    cursor: pointer;
+}
+
+.proof-details pre {
+    background: rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    overflow-x: auto;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+button.ready {
+    animation: pulse 2s infinite;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.7);
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 5px rgba(76, 175, 80, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 15px rgba(76, 175, 80, 1);
+    }
+    100% {
+        box-shadow: 0 0 5px rgba(76, 175, 80, 0.7);
+    }
+}
