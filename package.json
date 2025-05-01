@@ -1,0 +1,28 @@
+{
+  "name": "hardhat-project",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.8",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@oasisprotocol/sapphire-hardhat": "^2.22.2",
+    "hardhat": "^2.23.0",
+    "jest": "^29.7.0",
+    "parcel": "^2.14.4"
+  },
+  "dependencies": {
+    "@oasisprotocol/sapphire-contracts": "^0.2.14",
+    "@oasisprotocol/sapphire-paratime": "^2.1.0",
+    "dotenv": "^16.5.0"
+  },
+  "description": "This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a Hardhat Ignition module that deploys that contract.",
+  "version": "1.0.0",
+  "main": "hardhat.config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test:mocha": "mocha"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

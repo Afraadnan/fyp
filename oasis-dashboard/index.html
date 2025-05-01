@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dead Man's Switch</title>
+
+    <!-- Link to your custom CSS -->
+    <link rel="stylesheet" href="styles.css" />
+
+    <!-- Sapphire SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@oasisprotocol/sapphire-paratime@1.4.0/dist/sapphire-paratime.umd.min.js"></script>
+
+    <!-- Load ethers.js from jsDelivr CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+</head>
+
+<body>
+    <div class="layout">
+
+        <!-- Main Content Area -->
+        <div class="main">
+            <header class="header">
+                <h2><span class="emoji bounce">🧠</span> DeadManVault</h2>
+                <div class="wallet-pill" id="walletPill">🔌 Not Connected</div>
+            </header>
+
+            <h1><span class="emoji bounce">⚡</span> Dead Man's Switch</h1>
+            <p>A secure way to transfer assets after a period of inactivity</p>
+
+            <div class="dashboard">
+
+                <!-- Connection Section -->
+                <div class="container">
+                    <h2><span class="emoji wiggle">🔗</span> Connection</h2>
+                    <button id="connect" onclick="connectWallet()">
+                        <span class="emoji bounce">🔌</span> Connect Wallet
+                    </button>
+                    <div class="info-item" id="wallet">Wallet: Not connected</div>
+                    <div class="info-item" id="owner">Owner: Unknown</div>
+                    <div class="info-item" id="balance">Contract Balance: 0 ROSE</div>
+                </div>
+
+                <!-- Heartbeat Section -->
+                <div class="container">
+                    <h2><span class="emoji bounce">💓</span> Heartbeat Management</h2>
+                    <p>If you're the owner, send a heartbeat periodically to keep the vault active.</p>
+                    <button id="heartbeatBtn" onclick="sendHeartbeat()" disabled>
+                        <span class="emoji wiggle">📡</span> Send Heartbeat
+                    </button>
+                    
+                    <div class="info-item" id="lastPing">Last Active: Unknown</div>
+                    <div>Time Remaining: <span id="timeRemaining">--</span></div>
+                    <progress id="inactivityProgress" value="0" max="100"></progress>
+                  </div>
+                    
+                
+                     
+                    <div class="verification">
+                        <h3><span class="emoji bounce">🔍</span> Inactivity Verification</h3>
+                        <p>Check if the contract is currently inactive (required before triggering)</p>
+                        <div class="verification-options">
+                            <button id="verifyBtn" onclick="verifyInactivity()" disabled>
+                                <span class="emoji wiggle">🕵️‍♂️</span> Standard Verify
+                            </button>
+                            <button id="zkVerifyBtn" disabled>
+                                <span class="emoji wiggle">🔐</span> ZK Verify
+                            </button>
+                            
+                        </div>
+                    </div>
+
+
+<!-- Add this after the verification-options div in index.html -->
+<div id="zkProofStatus" class="zk-status"></div>
+
+
+                </div>
+
+                
+                <!-- Trigger Section -->
+                <div class="container">
+                    <h2><span class="emoji bounce">🧨</span> Trigger Switch</h2>
+                    <p>If the inactivity period has passed without a heartbeat, anyone can trigger the switch.</p>
+                    <button id="triggerBtn" class="danger" onclick="triggerSwitch()" disabled>
+                        <span class="emoji wiggle">🚨</span> Trigger Switch
+                    </button>
+                </div>
+
+                <!-- Beneficiary Section -->
+                <div class="container">
+                    <h2><span class="emoji bounce">👥</span> Beneficiary Management</h2>
+                    <p>Only the owner can add beneficiaries.</p>
+                    <div>
+                        <label for="beneficiaryAddress">Beneficiary Address:</label>
+                        <input type="text" id="beneficiaryAddress" placeholder="0x..." />
+                    </div>
+                    <div>
+                        <label for="beneficiaryShare">Share (%):</label>
+                        <input type="number" id="beneficiaryShare" placeholder="100" min="1" max="100" />
+                    </div>
+                    <button id="addBeneficiaryBtn" onclick="addBeneficiary()" disabled>
+                        <span class="emoji wiggle">➕</span> Add Beneficiary
+                    </button>
+                </div>
+
+                <!-- Deposit Section -->
+                <div class="container">
+                    <h2><span class="emoji bounce">💰</span> Deposit Funds</h2>
+                    <div>
+                        <label for="depositAmount">Amount (ETH):</label>
+                        <input type="number" id="depositAmount" placeholder="0.1" min="0.001" step="0.001" />
+                    </div>
+                    <button id="depositBtn" onclick="depositFunds()" disabled>
+                        <span class="emoji bounce">📥</span> Deposit Funds
+                    </button>
+                </div>
+
+                <!-- Status -->
+                <div class="status" id="status">
+                    <span class="emoji bounce">✅</span> Ready - Connect your wallet to begin
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Link to your custom JavaScript file -->
+    <script src="app.js"></script>
+    <script src="bene.js"></script>
+</body>
+</html>
