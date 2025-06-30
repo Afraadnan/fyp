@@ -3,37 +3,36 @@
 
 ## 🧠 Overview
 
-This project implements a **Dead Man’s Switch** that securely transfers control or assets (e.g., crypto funds) to beneficiaries if the owner becomes inactive. It combines **Fully Homomorphic Encryption (FHE)** with **Zero-Knowledge Proofs (ZK)** to verify inactivity off-chain—**without revealing sensitive data like timestamps**.
+This project is a privacy-focused **Dead Man’s Switch** that securely triggers fund release or control transfer when the owner becomes inactive. The system uses:
 
-Key components include:
-- `TFHE` in Rust for encrypted logic
-- `Oasis Sapphire` for off-chain compute privacy
-- `Solidity` smart contract for fund handling
-- `JavaScript` frontend for interaction
-- `Express.js + Nodemailer` for email alerts
+- 🔒 **Fully Homomorphic Encryption (TFHE)** in Rust to evaluate inactivity without revealing timestamps
+- 🛡 **Oasis Sapphire** for off-chain private logic
+- ⚖️ **Solidity smart contract** for on-chain control
+- 🖥 **JavaScript frontend** with MetaMask wallet connection
+
+It ensures user privacy using encrypted off-chain logic and zero-knowledge-style verifications — without leaking personal data on-chain.
 
 ---
 
 ## 📦 Features
 
-- ✅ Encrypted heartbeat verification using TFHE
-- 🕒 Live countdown & timeout logic (off-chain)
-- 🔒 ZK-proof-based fund trigger
-- 📜 Solidity contract for fund and beneficiary control
-- 📧 Email alerts to beneficiaries
-- 🧩 Modular, gas-efficient, and privacy-first
+- ✅ Encrypted inactivity check via TFHE
+- 🕒 Live countdown and heartbeat logging
+- 🔐 Triggerable switch logic on timeout
+- 📜 Smart contract manages beneficiaries and claims
+- 🧩 Modular Rust + Solidity + JS architecture
 
 ---
 
 ## 🛠 Tech Stack
 
-| Layer          | Tools & Frameworks                             |
-|----------------|-------------------------------------------------|
-| Smart Contract | Solidity, Hardhat, Ethers.js                   |
-| Backend        | Rust (TFHE), Node.js, Express, Nodemailer      |
-| Frontend       | JavaScript, HTML, CSS, Ethers.js, MetaMask     |
-| Privacy Layer  | TFHE (Zama), Oasis Sapphire                    |
-| Wallet         | MetaMask                                       |
+| Layer            | Tools & Frameworks                              |
+|------------------|--------------------------------------------------|
+| 💻 Frontend       | HTML, CSS, JavaScript, MetaMask, Ethers.js      |
+| 🔗 Smart Contract | Solidity, Hardhat, Ethers.js                     |
+| 🔐 Backend Logic  | Rust (TFHE - Zama), Cargo                        |
+| 🌐 Privacy Compute| Oasis Sapphire                                  |
+| ⚙️ Dev Tools      | Node.js, npm, Hardhat CLI, VS Code, Git          |
 
 ---
 
@@ -49,12 +48,13 @@ DeadMansSwitch-FYP/
 ├── contracts/
 │   └── DeadManSwitch.sol
 ├── backend/
-│   ├── tfhe\_inactivity.rs  
+│   └── tfhe\_inactivity.rs        # Rust logic using TFHE
 ├── scripts/
-│   └── deploy.js
-├── README.md
+│   └── deploy.js                 # Hardhat contract deployment
+├── hardhat.config.js
 ├── package.json
-└── hardhat.config.js
+├── Cargo.toml                    # Rust configuration
+└── README.md
 
 ````
 
@@ -62,15 +62,15 @@ DeadMansSwitch-FYP/
 
 ## 🔐 How It Works
 
-1. User connects wallet via MetaMask.
-2. `heartbeat()` function is called periodically and processed off-chain via encrypted logic.
-3. If timeout is reached (e.g., 30 days of inactivity), the system allows `triggerSwitch()`.
-4. Once triggered, email notifications are sent to beneficiaries.
-5. Beneficiaries can claim funds through the smart contract.
+1. User connects their wallet via MetaMask.
+2. A `heartbeat()` is sent regularly and encrypted off-chain.
+3. Rust backend (TFHE) evaluates if timeout is exceeded.
+4. If inactive for too long, the contract allows `triggerSwitch()`.
+5. Beneficiaries can now claim funds securely through the contract.
 
 ---
 
-## 💻 Setup Instructions
+## 🚀 Setup Instructions
 
 ### 1. Clone the Repository
 
@@ -79,34 +79,46 @@ git clone https://github.com/Afraadnan/dead-mans-switch-fyp.git
 cd dead-mans-switch-fyp
 ````
 
-### 2. Install Dependencies
+---
+
+### 2. Install JavaScript Dependencies
 
 ```bash
+# Frontend
 cd frontend
-npm install
-cd ../backend
 npm install
 ```
 
-### 3. Compile and Deploy Smart Contract
+---
+
+### 3. Compile the Rust Backend
+
+Install Rust via [rustup](https://rustup.rs/):
 
 ```bash
+cd backend
+cargo build --release
+```
+
+> Make sure Zama's TFHE crate is listed in `Cargo.toml`.
+
+---
+
+### 4. Compile & Deploy Smart Contract (Hardhat)
+
+```bash
+npm install   # in the project root
 npx hardhat compile
 npx hardhat run scripts/deploy.js --network sepolia
 ```
 
-### 4. Run Backend Server
-
-```bash
-node backend/express_server.js
-```
+---
 
 ### 5. Launch Frontend
 
-You can use [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) in VS Code or open `index.html` directly in your browser.
+You can use [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) in VS Code or simply open `index.html` in your browser.
 
 ---
-
 
 ## 📸 UI Preview
 
@@ -115,14 +127,11 @@ Coming soon! (You can include screenshots or a GIF of the countdown, MetaMask co
 ![image](https://github.com/user-attachments/assets/7dae6214-5f1f-4191-bbc5-af8a9631aa9f)
 ![image](https://github.com/user-attachments/assets/5c506733-8c06-40cd-bc12-7acf8b9aa26a)
 
+## 🔍 Developer Notes
 
----
-
-## 🔒 Security Notes
-
-* Off-chain TFHE ensures **no timestamps or user data is revealed**.
-* Gas costs minimized by delegating logic off-chain.
-* ZK-proof concept ensures **verifiable inactivity** without central trust.
+* Countdown logic is synced with encrypted backend.
+* No sensitive data (timestamps, identities) is exposed on-chain.
+* Designed for gas efficiency and privacy.
 
 ---
 
@@ -138,8 +147,11 @@ BSc Software Engineering – University of Nottingham Malaysia
 
 ## 📜 License
 
-This project is licensed under the **MIT License**.
-Use freely with credit. For educational or non-commercial research purposes.
+MIT License — open for research and educational use. Attribution appreciated.
 
----
+
+
+
+
+
 
