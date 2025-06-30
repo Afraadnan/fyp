@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dead Man's Switch</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.0.0/dist/ethers.umd.min.js"></script>
+  <link rel="stylesheet" href="styles.css" />
+  
+</head>
+<body>
+  <header class="header">
+    <h1 class="header-title">💀 Dead Man's Switch</h1>
+  </header>
+
+  <div class="dashboard">
+    <div class="control-panel">
+      <div class="tabs">
+        <div class="tab active" data-tab="main">Main</div>
+        <div class="tab" data-tab="beneficiaries">Beneficiaries</div>
+        <div class="tab" data-tab="settings">Settings</div>
+      </div>
+
+      <div class="tab-content active" id="main-tab">
+        <div class="button-group">
+          <button id="pingButton" class="btn btn-ping">🟢 Ping</button>
+          <button id="verifyButton" class="btn btn-verify">🕵️ Verify Inactivity</button>
+          <button id="claimButton" class="btn btn-claim">💰 Claim Funds</button>
+        </div>
+
+        <div class="status-panel">
+          <div class="status-message" id="status">
+            <div class="status-text">Loading...</div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h3 class="panel-title">Last Ping</h3>
+            </div>
+            <div class="panel-body">
+              <p><strong>Last Ping:</strong> <span id="lastPing">-</span></p>
+              <p><strong>Timeout (seconds):</strong> <span id="timeout">-</span></p>
+              <p><strong>⏳ Time Until Trigger:</strong> <span id="countdown">-</span></p>
+              <div class="progress-container">
+                <div id="progressBar" class="progress-bar"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="beneficiaries-tab"
+        <div class="panel">
+          <div class="panel-header">
+            <h3 class="panel-title">Manage Beneficiaries</h3>
+          </div>
+          <div class="panel-body">
+            <button id="addBeneficiaryBtn" class="btn btn-add">➕ Add Beneficiary</button>
+            
+            <div class="beneficiary-list">
+              <h4>Current Beneficiaries</h4>
+              <div id="beneficiaryList">
+                <!-- Beneficiaries will be listed here -->
+                <div class="beneficiary-item">No beneficiaries added yet.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="settings-tab">
+        <div class="panel">
+          <div class="panel-header">
+            <h3 class="panel-title">Notification Settings</h3>
+          </div>
+          <div class="panel-body">
+            <div class="form-group">
+              <label for="notificationEmail">Email for Notifications</label>
+              <input type="email" id="notificationEmail" placeholder="email@example.com">
+            </div>
+            <button id="saveSettingsBtn" class="btn btn-add">💾 Save Settings</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="event-log-panel">
+      <h3>📜 Event Log</h3>
+      <div id="eventLog"></div>
+    </div>
+  </div>
+
+  <!-- Add Beneficiary Modal -->
+  <div id="beneficiaryModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Add New Beneficiary</h2>
+      <div class="form-group">
+        <label for="beneficiaryAddress">Ethereum Address</label>
+        <input type="text" id="beneficiaryAddress" placeholder="0x...">
+      </div>
+      <div class="form-group">
+        <label for="beneficiaryName">Name (optional)</label>
+        <input type="text" id="beneficiaryName" placeholder="John Doe">
+      </div>
+      <div class="form-group">
+        <label for="beneficiaryEmail">Email for Notifications</label>
+        <input type="email" id="beneficiaryEmail" placeholder="email@example.com">
+      </div>
+      <button id="saveBeneficiaryBtn" class="btn btn-add">Add Beneficiary</button>
+    </div>
+  </div>
+
+  <div class="banner" id="releaseBanner">✅ Funds released to beneficiary!</div>
+  <div class="notification" id="triggerNotification">⚠️ Dead Man's Switch triggered! You can now claim funds.</div>
+
+  <script>
+    const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3"; 
+    const abi = [  {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_timeout",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "beneficiary",
+          "type": "address"
+        }
+      ],
+      "name": "BeneficiaryAdded",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "beneficiary",
+          "type": "address"
+        }
+      ],
+      "name": "BeneficiaryRemoved",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "beneficiary",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "FundsClaimed",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "Pinged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "Triggered",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_beneficiary",
+          "type": "address"
+        }
+      ],
+      "name": "addBeneficiary",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "beneficiaries",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "beneficiaryList",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "claim",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "claimed",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_index",
+          "type": "uint256"
+        }
+      ],
+      "name": "getBeneficiaryAtIndex",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getBeneficiaryCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_address",
+          "type": "address"
+        }
+      ],
+      "name": "isBeneficiary",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "lastPing",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "lastPingTime",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "ping",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_beneficiary",
+          "type": "address"
+        }
+      ],
+      "name": "removeBeneficiary",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "timeout",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "trigger",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "triggered",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_newTimeout",
+          "type": "uint256"
+        }
+      ],
+      "name": "updateTimeout",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "stateMutability": "payable",
+      "type": "receive"
+    } ];
+
+    // Create a provider and connect to MetaMask
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+    const contract = new ethers.Contract(contractAddress, abi, signer);
+
+    let timeoutGlobal = 0;
+    let lastPingGlobal = 0;
+    let currentUserAddress = '';
+    let beneficiaries = [];
+    let isTriggered = false;
+
+    // Initialize tabs
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        
+        tab.classList.add('active');
+        document.getElementById(`${tab.dataset.tab}-tab`).classList.add('active');
+      });
+    });
+
+    // Modal functionality
+    const modal = document.getElementById("beneficiaryModal");
+    const addBeneficiaryBtn = document.getElementById("addBeneficiaryBtn");
+    const closeBtn = document.querySelector(".close");
+    
+    addBeneficiaryBtn.addEventListener("click", () => {
+      modal.style.display = "block";
+    });
+    
+    closeBtn.addEventListener("click", () => {
+      modal.style.display = "none";
+    });
+    
+    window.addEventListener("click", (event) => {
+      if (event.target === modal) {
+        modal.style.display = "none";
+      }
+    });
+
+    // Save beneficiary
+    document.getElementById("saveBeneficiaryBtn").addEventListener("click", async () => {
+      const address = document.getElementById("beneficiaryAddress").value;
+      const name = document.getElementById("beneficiaryName").value;
+      const email = document.getElementById("beneficiaryEmail").value;
+      
+      if (!address || !ethers.utils.isAddress(address)) {
+        alert("Please enter a valid Ethereum address");
+        return;
+      }
+      
+      try {
+        const response = await fetch('http://localhost:8545/add_beneficiary', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contractAddress,
+            beneficiary: {
+              address,
+              name: name || 'Anonymous',
+              email: email || '',
+            }
+          }),
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          loadBeneficiaries();
+          modal.style.display = "none";
+          logEvent(`➕ Added beneficiary: ${name || address}`);
+          
+          // Clear form
+          document.getElementById("beneficiaryAddress").value = '';
+          document.getElementById("beneficiaryName").value = '';
+          document.getElementById("beneficiaryEmail").value = '';
+        } else {
+          alert(`Failed to add beneficiary: ${result.message}`);
+        }
+      } catch (err) {
+        console.error("Error adding beneficiary:", err);
+        alert("Error adding beneficiary. See console for details.");
+      }
+    });
+
+    // Save settings
+    document.getElementById("saveSettingsBtn").addEventListener("click", async () => {
+      const email = document.getElementById("notificationEmail").value;
+      
+      try {
+        const response = await fetch('http://localhost:8545/update_settings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contractAddress,
+            ownerAddress: currentUserAddress,
+            settings: {
+              notificationEmail: email
+            }
+          }),
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          logEvent("⚙️ Settings updated");
+          alert("Settings saved successfully!");
+        } else {
+          alert(`Failed to save settings: ${result.message}`);
+        }
+      } catch (err) {
+        console.error("Error saving settings:", err);
+        alert("Error saving settings. See console for details.");
+      }
+    });
+
+    async function loadBeneficiaries() {
+      try {
+        const response = await fetch(`http://localhost:8545/beneficiaries?contractAddress=${contractAddress}`);
+        const data = await response.json();
+        
+        beneficiaries = data.beneficiaries || [];
+        const listElement = document.getElementById("beneficiaryList");
+        
+        if (beneficiaries.length === 0) {
+          listElement.innerHTML = '<div class="beneficiary-item">No beneficiaries added yet.</div>';
+          return;
+        }
+        
+        listElement.innerHTML = '';
+        beneficiaries.forEach(beneficiary => {
+          const item = document.createElement('div');
+          item.className = 'beneficiary-item';
+          item.innerHTML = `
+            <div>
+              <strong>${beneficiary.name}</strong><br>
+              <small>${beneficiary.address}</small>
+            </div>
+            <button class="btn btn-danger remove-beneficiary" data-address="${beneficiary.address}">❌</button>
+          `;
+          listElement.appendChild(item);
+        });
+        
+        // Add event listeners to remove buttons
+        document.querySelectorAll('.remove-beneficiary').forEach(button => {
+          button.addEventListener('click', async (e) => {
+            const address = e.target.dataset.address;
+            await removeBeneficiary(address);
+          });
+        });
+      } catch (err) {
+        console.error("Error loading beneficiaries:", err);
+      }
+    }
+
+    async function removeBeneficiary(address) {
+      try {
+        const response = await fetch('http://localhost:8545/remove_beneficiary', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contractAddress,
+            beneficiaryAddress: address
+          }),
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          loadBeneficiaries();
+          logEvent(`🗑️ Removed beneficiary: ${address}`);
+        } else {
+          alert(`Failed to remove beneficiary: ${result.message}`);
+        }
+      } catch (err) {
+        console.error("Error removing beneficiary:", err);
+        alert("Error removing beneficiary. See console for details.");
+      }
+    }
+
+    async function updateDisplay() {
+  try {
+    const [lastPing, timeout, triggered,claimed] = await Promise.all([
+      contract.lastPing(),
+      contract.timeout(),
+      contract.triggered(),
+      contract.claimed()
+    ]);
+
+    lastPingGlobal = lastPing.toNumber();
+    timeoutGlobal = timeout.toNumber();
+    isTriggered = triggered;
+
+    const now = Math.floor(Date.now() / 1000);
+    const remaining = Math.max((lastPingGlobal + timeoutGlobal) - now, 0);
+
+    document.getElementById("lastPing").innerText = new Date(lastPingGlobal * 1000).toLocaleString();
+    document.getElementById("timeout").innerText = timeoutGlobal;
+    document.getElementById("countdown").innerText = formatTime(remaining);
+
+    updateProgressBar(remaining);
+
+    const statusElement = document.getElementById("status");
+    
+    if (isTriggered) {
+      statusElement.innerHTML = "<div class='status-text' style='color: var(--danger)'>⛔️ Switch triggered – beneficiaries can claim</div>";
+      await checkBeneficiaryStatus(); // Check claim status when triggered
+    } else if (remaining === 0) {
+      statusElement.innerHTML = "<div class='status-text' style='color: var(--warning)'>⚠️ Timeout reached – eligible to trigger</div>";
+    } else {
+      statusElement.innerHTML = "<div class='status-text' style='color: var(--accent)'>✅ Owner still active</div>";
+    }
+  } catch (err) {
+    console.error("Error updating display:", err);
+  }
+}
+
+    function formatTime(seconds) {
+      if (seconds === 0) return "Expired";
+      
+      const days = Math.floor(seconds / 86400);
+      const hours = Math.floor((seconds % 86400) / 3600);
+      const mins = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+      
+      if (days > 0) {
+        return `${days}d ${hours}h ${mins}m`;
+      } else if (hours > 0) {
+        return `${hours}h ${mins}m ${secs}s`;
+      } else {
+        return `${mins}m ${secs}s`;
+      }
+    }
+
+    function updateProgressBar(remaining) {
+      const full = timeoutGlobal;
+      const percent = full > 0 ? (remaining / full) * 100 : 0;
+      const bar = document.getElementById("progressBar");
+      bar.style.width = percent + "%";
+      bar.style.background = percent > 20 ? "linear-gradient(90deg, #4caf50, #81c784)" : "linear-gradient(90deg, #e53935, #ef9a9a)";
+    }
+
+    function logEvent(message) {
+      const log = document.getElementById("eventLog");
+      const timestamp = new Date().toLocaleTimeString();
+      log.innerHTML = `<div>[${timestamp}] ${message}</div>` + log.innerHTML;
+    }
+
+    async function checkOwner() {
+      try {
+        const owner = await contract.owner();
+        console.log("Contract owner:", owner);
+        currentUserAddress = await signer.getAddress();
+        console.log("Your address:", currentUserAddress);
+        
+        // Check if current user is a beneficiary
+        await checkBeneficiaryStatus();
+      } catch (err) {
+        console.error("Error checking owner:", err);
+      }
+    }
+
+    async function checkBeneficiaryStatus() {
+  try {
+    const address = await signer.getAddress();
+    const [isBeneficiary, triggered, claimed] = await Promise.all([
+      contract.isBeneficiary(address),
+      contract.triggered(),
+      contract.claimed() // Use the existing claimed() function
+    ]);
+
+    const claimButton = document.getElementById("claimButton");
+    
+    if (isBeneficiary && triggered && !claimed) {
+      claimButton.style.display = "inline-block";
+      claimButton.textContent = "💰 Claim Funds";
+    } else {
+      claimButton.style.display = "none";
+      if (claimed) {
+        claimButton.textContent = "✅ Funds Already Claimed";
+      }
+    }
+  } catch (err) {
+    console.error("Error checking status:", err);
+  }
+} 
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    function showTriggerNotification() {
+      const notification = document.getElementById("triggerNotification");
+      notification.style.display = "block";
+      setTimeout(() => {
+        notification.style.display = "none";
+      }, 10000);
+    }
+
+    async function pingContract() {
+      try {
+        const tx = await contract.ping(); // Calls the ping() function on the contract
+        await tx.wait();
+        logEvent("🔔 Ping sent by owner.");
+        updateDisplay(); // Refresh the displayed contract state
+      } catch (err) {
+        console.error("Ping failed:", err);
+        logEvent("❌ Ping failed: " + err.message);
+      }
+    }
+// Verifies inactivity using off-chain backend service and triggers the switch if needed
+    async function verifyInactivity() {
+      try {
+        // Calls your Express.js API to check if owner has exceeded timeout
+        const response = await fetch(`http://localhost:8545/check_timeout?last_ping=${lastPingGlobal}&timeout_secs=${timeoutGlobal}`);
+        const shouldTrigger = await response.json();
+
+        if (shouldTrigger) {
+          const tx = await contract.trigger();
+          await tx.wait();
+          logEvent("⚠️ User inactive beyond threshold, Switch triggered!");
+          
+          // Notify beneficiaries
+          await notifyBeneficiaries();
+          
+          alert("⚠️ Switch triggered! Beneficiaries can now claim funds.");
+        } else {
+          alert("Owner is still active.");
+          logEvent("🕵️ Inactivity check: Owner is still active.");
+        }
+
+        updateDisplay();
+      } catch (err) {
+        console.error("Inactivity check failed:", err);
+        logEvent("❌ Inactivity check failed: " + err.message);
+      }
+    }
+// Sends a POST request to notify beneficiaries via backend (e.g., email, webhooks)
+    async function notifyBeneficiaries() {
+      try {
+        const response = await fetch('http://localhost:8545/notify_beneficiaries', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contractAddress // Send the contract address as payload
+          }),
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          logEvent("📧 Notification sent to all beneficiaries");
+        } else {
+          logEvent("⚠️ Failed to notify some beneficiaries");
+        }
+      } catch (err) {
+        console.error("Error notifying beneficiaries:", err);
+      }
+    }
+// Allows a registered beneficiary to claim their funds once the switch is triggered
+   
+
+async function claimFunds() {
+  const button = document.getElementById("claimButton");
+  try {
+    button.disabled = true;
+    
+    // Check using the contract's actual function
+    const alreadyClaimed = await contract.claimed();
+    if (alreadyClaimed) {
+      alert("Funds have already been claimed from this vault");
+      return;
+    }
+
+    const tx = await contract.claim();
+    await tx.wait();
+    button.textContent = "✅ Claimed";
+    logEvent("Funds claimed successfully");
+  } catch (err) {
+    button.disabled = false;
+    console.error("Claim failed:", err);
+    alert(`Claim failed: ${err.message}`);
+  }
+}
+
+    function showReleaseBanner() {
+      const banner = document.getElementById("releaseBanner");
+      banner.style.display = "block";
+      setTimeout(() => {
+        banner.style.display = "none";
+      }, 5000);
+    }
+
+    // Initialize application
+    window.onload = async () => {
+      try {
+        await provider.send("eth_requestAccounts", []);
+        await checkOwner();
+        await loadBeneficiaries();
+        await updateDisplay();
+        
+        // Check if switch is already triggered
+        const isTriggered = await contract.triggered();
+        if (isTriggered) {
+          checkBeneficiaryStatus();
+        }
+        
+        // Set up update interval
+        setInterval(updateDisplay, 1000);
+      } catch (err) {
+        console.error("Initialization error:", err);
+        logEvent("❌ Failed to initialize application: " + err.message);
+      }
+    };
+
+    // Set up event listeners
+    document.getElementById("pingButton").addEventListener("click", pingContract);
+    document.getElementById("verifyButton").addEventListener("click", verifyInactivity);
+    document.getElementById("claimButton").addEventListener("click", claimFunds);
+  </script>
+</body>
+</html>
