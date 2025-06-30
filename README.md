@@ -49,9 +49,7 @@ DeadMansSwitch-FYP/
 ├── contracts/
 │   └── DeadManSwitch.sol
 ├── backend/
-│   ├── tfhe\_inactivity.rs
-│   ├── express\_server.js
-│   └── nodemailer\_config.js
+│   ├── tfhe\_inactivity.rs  
 ├── scripts/
 │   └── deploy.js
 ├── README.md
@@ -109,27 +107,14 @@ You can use [Live Server](https://marketplace.visualstudio.com/items?itemName=ri
 
 ---
 
-## 📧 Email Setup
-
-To enable email alerts, configure `nodemailer_config.js`:
-
-```js
-module.exports = {
-  service: 'YourSMTPService',
-  auth: {
-    user: 'your@email.com',
-    pass: 'yourpassword'
-  }
-}
-```
-
-Use Mailtrap or Gmail SMTP for testing.
-
----
 
 ## 📸 UI Preview
 
 Coming soon! (You can include screenshots or a GIF of the countdown, MetaMask connection, and beneficiary UI.)
+
+![image](https://github.com/user-attachments/assets/7dae6214-5f1f-4191-bbc5-af8a9631aa9f)
+![image](https://github.com/user-attachments/assets/5c506733-8c06-40cd-bc12-7acf8b9aa26a)
+
 
 ---
 
