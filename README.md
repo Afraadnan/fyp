@@ -122,7 +122,7 @@ You can use [Live Server](https://marketplace.visualstudio.com/items?itemName=ri
 
 ## 📸 UI Preview
 
-Coming soon! (You can include screenshots or a GIF of the countdown, MetaMask connection, and beneficiary UI.)
+
 
 ![image](https://github.com/user-attachments/assets/7dae6214-5f1f-4191-bbc5-af8a9631aa9f)
 ![image](https://github.com/user-attachments/assets/5c506733-8c06-40cd-bc12-7acf8b9aa26a)
